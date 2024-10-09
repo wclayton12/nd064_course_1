@@ -36,9 +36,35 @@ def index():
 def post(post_id):
     post = get_post(post_id)
     if post is None:
-      return render_template('404.html'), 404
+        logging.error(f'Article with id {post_id} does not exist')
+        return render_template('404.html'), 404
     else:
-      return render_template('post.html', post=post)
+        logging.info(f'Article "{post['title']}" retrieved!')
+        return render_template('post.html', post=post)
+        
+#healthcheck
+@app.route('/healthz', methods=['GET'])
+def healthz():
+    response_body = {'result': 'OK - healthy'}
+    status_code = 200
+
+#metrics
+@app.route('/metrics', methods=['GET'])
+def metrics():
+    metrics_obj = {
+        'db_connection_count': 0,
+        'post_count': None
+    }
+
+    get_article_count(metrics_obj)
+
+    response = app.response_class(
+        response=json.dumps(metrics_obj, indent=4),
+        status=200,
+        mimetype='application/json'
+    )
+
+    return response
 
 # Define the About Us page
 @app.route('/about')
